@@ -18,10 +18,21 @@ print (root.tag)
 ################## V A R S ################
 
 roomString = '' #to extract xml id data
-roomList = [] #used to convert xml string to list
-roomVisitedFlags = [] 
-roomNames = []
 giantLookUpTable = pd.DataFrame()
+roomList = [] #used to convert xml string to list
+# roomNames = []
+# roomsNorth = []
+# roomsNorth = []
+# roomsEast = []
+# roomsSouth = []
+# roomsWest = []
+# worldObjects = []
+roomVisitedChecklist = [] 
+directionVisitedN = []
+directionVisitedE = []
+directionVisitedS = []
+directionVisitedW = []
+roomItemChecklist = []
 
 ################## D E F S ################
 
@@ -57,7 +68,6 @@ def grabRoomIds(rmstr):
     return 
 
 def grabRoomNames(rmstr):
-    global roomNames
     attr = 'roomName'
 
     for room in root:
@@ -73,41 +83,143 @@ def grabRoomNames(rmstr):
 
     return 
 
-def createroomVisitedFlags():
-    global roomVisitedFlags
+
+def grabNorth(rmstr):
+    attr = 'N'
+
+    for room in root:
+        try: 
+            tempName = room.attrib['north']
+
+        except:
+            tempName = '0'
+            
+        finally:
+            rmstr += tempName
+            rmstr += ','
+
+    roomList = Convert(rmstr)
+    roomList.pop()
+
+    addToLUT(roomList, attr)
+    return
+
+def grabEast(rmstr):
+    attr = 'E'
+
+    for room in root:
+        try: 
+            tempName = room.attrib['east']
+
+        except:
+            tempName = '0'
+            
+        finally:
+            rmstr += tempName
+            rmstr += ','
+
+    roomList = Convert(rmstr)
+    roomList.pop()
+
+    addToLUT(roomList, attr)
+    return
+
+def grabSouth(rmstr):
+    attr = 'S'
+
+    for room in root:
+        try: 
+            tempName = room.attrib['south']
+
+        except:
+            tempName = '0'
+            
+        finally:
+            rmstr += tempName
+            rmstr += ','
+
+    roomList = Convert(rmstr)
+    roomList.pop()
+
+    addToLUT(roomList, attr)
+    return
+
+def grabWest(rmstr):
+    attr = 'W'
+
+    for room in root:
+        try: 
+            tempName = room.attrib['west']
+
+        except:
+            tempName = '0'
+            
+        finally:
+            rmstr += tempName
+            rmstr += ','
+
+    roomList = Convert(rmstr)
+    roomList.pop()
+
+    addToLUT(roomList, attr)
+    return
+
+def grabWorldObjects(rmstr):
+    attr = 'roomItems'
+
+    for room in root:
+        try:
+            tempName = room.find('object').attrib['name']
+                
+        except:
+            tempName = '0'
+            
+        finally:
+            rmstr += tempName
+            rmstr += ','
+
+    roomList = Convert(rmstr)
+    roomList.pop()
+
+    addToLUT(roomList, attr)
+    return
+
+def createroomVisitedChecklist():
+    global roomVisitedChecklist
     global roomList
     rows = len(roomList)
     cols = 2
 
-    #roomVisitedFlags = [[[0 for i in range(cols)] for j in range(rows)]]
+    #roomVisitedChecklist = [[[0 for i in range(cols)] for j in range(rows)]]
 
     # for i in range(rows):
     #     for j in range(cols):
-    #         roomVisitedFlags[i][0] = roomList[i]
+    #         roomVisitedChecklist[i][0] = roomList[i]
 
-    #roomVisitedFlags = np.concatenate((np.zeros((len(roomList),1), dtype=int), roomList), axis=1)
+    #roomVisitedChecklist = np.concatenate((np.zeros((len(roomList),1), dtype=int), roomList), axis=1)
 
-    #roomVisitedFlags = np.array(roomList).reshape(1, 2)
+    #roomVisitedChecklist = np.array(roomList).reshape(1, 2)
 
-    #roomVisitedFlags = roomList.reshape(rows, cols)
+    #roomVisitedChecklist = roomList.reshape(rows, cols)
   
     # for i in range(rows):
-    #     roomVisitedFlags[i][0] = roomList[i] 
+    #     roomVisitedChecklist[i][0] = roomList[i] 
 
     return
 
-def grabWorldObjects():
+def createDirectionVisitedNorth():
+
+    return
+    
+def createDirectionVisitedEast():
     
     return
 
-def createRoomVisitedEmpty():
+def createDirectionVisitedSouth():
     
-    #print(np.zeros((len(roomList),1), dtype=int))
-
     return
 
-
-def createItemFlagsEmpty():
+def createDirectionVisitedWest():
     
     return
 
@@ -122,11 +234,30 @@ grabRoomIds(roomString)
 roomString = ''
 grabRoomNames(roomString)
 roomString = ''
+grabNorth(roomString)
+roomString = ''
+grabEast(roomString)
+roomString = ''
+grabSouth(roomString)
+roomString = ''
+grabWest(roomString)
+roomString = ''
+grabWorldObjects(roomString)
+roomString = ''
+
+
 
 print(giantLookUpTable)
 
 
+## maze navigation loop goes here
 
+
+
+
+
+
+##############################################################
 ##testing##
     # #print(roomList)
     # print (room.attrib) #prints all <room> properties
