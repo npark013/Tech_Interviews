@@ -187,49 +187,79 @@ def grabWorldObjects(rmstr):
 def createroomVisitedChecklist():
     global roomVisitedChecklist
     global roomList
+    attr = 'roomsVisited'
     rows = len(roomList)
-    cols = 2
+    emptyArray = [0]*rows
 
-    #roomVisitedChecklist = [[[0 for i in range(cols)] for j in range(rows)]]
+    roomVisitedChecklist = emptyArray
 
-    # for i in range(rows):
-    #     for j in range(cols):
-    #         roomVisitedChecklist[i][0] = roomList[i]
-
-    #roomVisitedChecklist = np.concatenate((np.zeros((len(roomList),1), dtype=int), roomList), axis=1)
-
-    #roomVisitedChecklist = np.array(roomList).reshape(1, 2)
-
-    #roomVisitedChecklist = roomList.reshape(rows, cols)
-  
-    # for i in range(rows):
-    #     roomVisitedChecklist[i][0] = roomList[i] 
+    addToLUT(roomVisitedChecklist, attr)
 
     return
 
 def createDirectionVisitedNorth():
+    global directionVisitedN
+    global roomList
+    attr = 'directN'
+    rows = len(roomList)
+    emptyArray = [0]*rows
 
+    directionVisitedN = emptyArray
+
+    addToLUT(directionVisitedN, attr)
     return
     
 def createDirectionVisitedEast():
-    
+    global directionVisitedE
+    global roomList
+    attr = 'directE'
+    rows = len(roomList)
+    emptyArray = [0]*rows
+
+    directionVisitedE = emptyArray
+
+    addToLUT(directionVisitedE, attr)
     return
 
 def createDirectionVisitedSouth():
-    
+    global directionVisitedS
+    global roomList
+    attr = 'directS'
+    rows = len(roomList)
+    emptyArray = [0]*rows
+
+    directionVisitedS = emptyArray
+
+    addToLUT(directionVisitedS, attr)
     return
 
 def createDirectionVisitedWest():
-    
+    global directionVisitedW
+    global roomList
+    attr = 'directW'
+    rows = len(roomList)
+    emptyArray = [0]*rows
+
+    directionVisitedW = emptyArray
+
+    addToLUT(directionVisitedW, attr)
     return
 
 def createItemChecklist():
-    
+    global roomItemChecklist
+    global roomList
+    attr = 'itemChecklist'
+    rows = len(roomList)
+    emptyArray = [0]*rows
+
+    roomItemChecklist = emptyArray
+
+    addToLUT(roomItemChecklist, attr)
     return
 
 ###################### M A I N  C O D E ######################
 
-## fills roomList with list of all rooms from map
+## Fill LUT with map info & additional columns
 grabRoomIds(roomString)
 roomString = ''
 grabRoomNames(roomString)
@@ -244,11 +274,14 @@ grabWest(roomString)
 roomString = ''
 grabWorldObjects(roomString)
 roomString = ''
-
-
+createroomVisitedChecklist()
+createDirectionVisitedNorth()
+createDirectionVisitedEast()
+createDirectionVisitedSouth()
+createDirectionVisitedWest()
+createItemChecklist()
 
 print(giantLookUpTable)
-
 
 ## maze navigation loop goes here
 
