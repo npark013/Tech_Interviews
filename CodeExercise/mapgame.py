@@ -1,3 +1,11 @@
+## Code Exercise: A-Maze-ingly Retro Route Puzzle
+## Written by Noelle Parker, August 2022
+## 
+## This python program parses data from a map.xml file, creates a model of the 
+## map via a dataframe, and then output a valid route through the map's maze. 
+## The file also uses a scenario.txt file to catalog which room is the starting 
+## room and which items are necessary to grab along the route. 
+
 import xml.etree.ElementTree as ET
 import numpy as np
 import pandas as pd
@@ -5,34 +13,28 @@ import bs4 as bs
 
 nodeTree = ET.parse('map.xml')
 
-root = nodeTree.getroot()
+root = nodeTree.getroot()    
 
-##testing##
-    #root.tag and root.tag[0:3] = "map"
-    #root.tag[0:2] = "ma"
-    #root.tag[0] and root.tag[0:1] = "m"
-    #root.tag[1] = "a"
-
-print (root.tag)
+## Note: Starting room in text file must match format for room 'id' and
+## objects in text file must match format for object 'name' with respect to map.xml
+scenarioFile = 'scenario.txt' 
 
 ################## V A R S ################
 
-roomString = '' #to extract xml id data
 giantLookUpTable = pd.DataFrame()
+roomString = '' #to extract xml id data
 roomList = [] #used to convert xml string to list
-# roomNames = []
-# roomsNorth = []
-# roomsNorth = []
-# roomsEast = []
-# roomsSouth = []
-# roomsWest = []
-# worldObjects = []
 roomVisitedChecklist = [] 
 directionVisitedN = []
 directionVisitedE = []
 directionVisitedS = []
 directionVisitedW = []
 roomItemChecklist = []
+allNeededItemsCollected = False 
+textFileInfo = [] #used to convert txt file to list
+startingRoom = ''
+currentRoom = ''
+direction = ''
 
 ################## D E F S ################
 
@@ -40,12 +42,20 @@ def Convert(string):
     li = list(string.split(","))
     return li
 
-#adds the next column to giantLookUpTable
+##textFileInfo populated
+def readTxtFile(filename):
+    global textFileInfo
+    with open(filename) as file:
+        lines = file.readlines()
+        textFileInfo = [line.rstrip() for line in lines]
+
+    return
+
+##adds the next column to giantLookUpTable
 def addToLUT(nextList, attrStr):
     global giantLookUpTable
 
     tempList = pd.DataFrame(nextList, columns=[attrStr])
-
     giantLookUpTable = pd.concat([giantLookUpTable, tempList], axis=1)
 
     return
@@ -62,11 +72,10 @@ def grabRoomIds(rmstr):
 
     roomList = Convert(rmstr)
     roomList.pop()
-
     addToLUT(roomList, attr)
-
     return 
 
+## extracts room names from map.xml
 def grabRoomNames(rmstr):
     attr = 'roomName'
 
@@ -78,12 +87,10 @@ def grabRoomNames(rmstr):
 
     roomList = Convert(rmstr)
     roomList.pop()
-
     addToLUT(roomList, attr)
-
     return 
 
-
+## extracts rooms with Norths from map.xml
 def grabNorth(rmstr):
     attr = 'N'
 
@@ -100,10 +107,10 @@ def grabNorth(rmstr):
 
     roomList = Convert(rmstr)
     roomList.pop()
-
     addToLUT(roomList, attr)
     return
 
+## extracts rooms with Easts from map.xml
 def grabEast(rmstr):
     attr = 'E'
 
@@ -120,10 +127,10 @@ def grabEast(rmstr):
 
     roomList = Convert(rmstr)
     roomList.pop()
-
     addToLUT(roomList, attr)
     return
 
+## extracts rooms with Souths from map.xml
 def grabSouth(rmstr):
     attr = 'S'
 
@@ -140,10 +147,10 @@ def grabSouth(rmstr):
 
     roomList = Convert(rmstr)
     roomList.pop()
-
     addToLUT(roomList, attr)
     return
 
+## extracts rooms with Wests from map.xml
 def grabWest(rmstr):
     attr = 'W'
 
@@ -160,10 +167,10 @@ def grabWest(rmstr):
 
     roomList = Convert(rmstr)
     roomList.pop()
-
     addToLUT(roomList, attr)
     return
 
+## extracts room objects from map.xml
 def grabWorldObjects(rmstr):
     attr = 'roomItems'
 
@@ -180,80 +187,79 @@ def grabWorldObjects(rmstr):
 
     roomList = Convert(rmstr)
     roomList.pop()
-
     addToLUT(roomList, attr)
     return
 
+##makes empty bool column for data frame
 def createroomVisitedChecklist():
     global roomVisitedChecklist
     global roomList
     attr = 'roomsVisited'
     rows = len(roomList)
+
     emptyArray = [0]*rows
-
     roomVisitedChecklist = emptyArray
-
     addToLUT(roomVisitedChecklist, attr)
 
     return
 
+##makes empty bool column for data frame
 def createDirectionVisitedNorth():
     global directionVisitedN
     global roomList
     attr = 'directN'
     rows = len(roomList)
+
     emptyArray = [0]*rows
-
     directionVisitedN = emptyArray
-
     addToLUT(directionVisitedN, attr)
     return
-    
+
+##makes empty bool column for data frame
 def createDirectionVisitedEast():
     global directionVisitedE
     global roomList
     attr = 'directE'
     rows = len(roomList)
+
     emptyArray = [0]*rows
-
     directionVisitedE = emptyArray
-
     addToLUT(directionVisitedE, attr)
     return
 
+##makes empty bool column for data frame
 def createDirectionVisitedSouth():
     global directionVisitedS
     global roomList
     attr = 'directS'
     rows = len(roomList)
+
     emptyArray = [0]*rows
-
     directionVisitedS = emptyArray
-
     addToLUT(directionVisitedS, attr)
     return
 
+##makes empty bool column for data frame
 def createDirectionVisitedWest():
     global directionVisitedW
     global roomList
     attr = 'directW'
     rows = len(roomList)
+
     emptyArray = [0]*rows
-
     directionVisitedW = emptyArray
-
     addToLUT(directionVisitedW, attr)
     return
 
+##makes empty bool column for data frame
 def createItemChecklist():
     global roomItemChecklist
     global roomList
     attr = 'itemChecklist'
     rows = len(roomList)
+
     emptyArray = [0]*rows
-
     roomItemChecklist = emptyArray
-
     addToLUT(roomItemChecklist, attr)
     return
 
@@ -281,9 +287,24 @@ createDirectionVisitedSouth()
 createDirectionVisitedWest()
 createItemChecklist()
 
+## Find out starting room and objects needed for route
+readTxtFile(scenarioFile) 
+startingRoom = textFileInfo[0]
+currentRoom = startingRoom
+
+## Maze navigation loop
+
 print(giantLookUpTable)
 
-## maze navigation loop goes here
+# while (allNeededItemsCollected != True):
+#     # grab object if there is one
+
+#     if (1):
+#         print
+#     elif(0):
+#         print
+#     else:
+#         print
 
 
 
@@ -291,7 +312,22 @@ print(giantLookUpTable)
 
 
 ##############################################################
-##testing##
+##Testing##
+
+# giantLookUpTable.at[0,"roomID"]
+# giantLookUpTable.iat[1,3]
+# df.loc[row_indexer,column_indexer]
+# df2[df2["E"].isin(["two", "four"])]
+
+#print(giantLookUpTable)
+
+    #print (root.tag)
+
+    #root.tag and root.tag[0:3] = "map"
+    #root.tag[0:2] = "ma"
+    #root.tag[0] and root.tag[0:1] = "m"
+    #root.tag[1] = "a"
+
     # #print(roomList)
     # print (room.attrib) #prints all <room> properties
             #print (room.attrib['id']) #prints <room> 'id' property
