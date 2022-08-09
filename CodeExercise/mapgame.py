@@ -253,18 +253,6 @@ def createDirectionVisitedWest():
     addToLUT(directionVisitedW, attr)
     return
 
-# ## makes empty bool column for data frame
-# def createItemChecklist():
-#     global roomItemChecklist
-#     global roomList
-#     attr = 'itemChecklist'
-#     rows = len(roomList)
-
-#     emptyArray = [0]*rows
-#     roomItemChecklist = emptyArray
-#     addToLUT(roomItemChecklist, attr)
-#     return
-
 #
 def updateRoomVisCheck():
     global giantLookUpTable
@@ -310,12 +298,14 @@ def updateInventory():
     global giantLookUpTable
     global currentRoom
     roomObject = giantLookUpTable.at[currentRoom,"roomItems"]
+    currRoomName = giantLookUpTable.at[currentRoom, "roomName"]
+
 
     if (roomObject != '0' and roomObject not in itemsFound):
         itemsFound.append(roomObject)
         giantLookUpTable.at[currentRoom,"roomItems"] = '0'
 
-        print('Picked up ' + roomObject + ' in ' + currentRoom + '.\n')
+        print('\nPicked up ' + roomObject + ' in ' + currRoomName + '!\n')
 
     return
 
@@ -349,58 +339,57 @@ def evaluateDirection():
     histW = giantLookUpTable.at[currentRoom, "goneW"]
 
     
-
-    if not histN and currN != '0':
-        if currN != historyLog[-1]:
+    if currN != historyLog[-1]:
+        if not histN and currN != '0':
             direction = "North"
             print('Going ' + direction)
             historyLog.append(currentRoom)
-            giantLookUpTable.at[currentRoom, "goneN"] = '1'
+            updateDirVisN()
             return currN
-        else:
-            backTrack = "North"
-            giantLookUpTable.at[currentRoom, "goneN"] = '1'
-    
-    elif not histE and currE != '0':
-        if currE != historyLog[-1]:
+                
+    else:
+        backTrack = "North"
+        updateDirVisN()
+                
+
+    if currE != historyLog[-1]:
+        if not histE and currE != '0':
             direction = "East"
             print('Going ' + direction)
             historyLog.append(currentRoom)
-            giantLookUpTable.at[currentRoom, "goneE"] = '1'
+            updateDirVisE()
             return currE
-        else:
-            backTrack = "East"
-            giantLookUpTable.at[currentRoom, "goneE"] = '1'
+    else:
+        backTrack = "East"
+        updateDirVisE()
 
-    
-    elif not histS and currS != '0':
-        if currS != historyLog[-1]:
+    if currS != historyLog[-1]:
+        if not histS and currS != '0':
             direction = "South"
             print('Going ' + direction)
             historyLog.append(currentRoom)
-            giantLookUpTable.at[currentRoom, "goneS"] = '1'
+            updateDirVisS()
             return currS
-        else:
-            backTrack = "South"
-            giantLookUpTable.at[currentRoom, "goneS"] = '1'
+    else:
+        backTrack = "South"
+        updateDirVisS()
 
-    elif not histW and currW != '0':
-        if currW != historyLog[-1]:
+    if currW != historyLog[-1]:
+        if not histW and currW != '0':
+        
             direction = "West"
             print('Going ' + direction)
             historyLog.append(currentRoom)
-            giantLookUpTable.at[currentRoom, "goneW"] = '1'
+            updateDirVisW()
             return currW
-        else:
-            backTrack = "West"
-            giantLookUpTable.at[currentRoom, "goneW"] = '1'
+    else:
+        backTrack = "West"
+        updateDirVisW()
 
-    else: 
-        print ('Going back ' + backTrack)
-        return historyLog.pop()
+    
+    print ('Going back ' + backTrack)
+    return historyLog.pop()
 
-
-    return
 
 
 ###################### M A I N  C O D E ######################
@@ -441,10 +430,11 @@ textFileInfo.remove(startingRoom)
 ## Maze navigation loop
 while not allNeededItemsCollected:
     roomSeen = giantLookUpTable.at[currentRoom,"roomsVisited"]
+    currRoomName = giantLookUpTable.at[currentRoom, "roomName"]
 
     if not roomSeen: #new room
         updateRoomVisCheck()
-        print('In the ' + currentRoom)
+        print('In the ' + currRoomName)
 
         # grab object if there is one 
         updateInventory()
@@ -452,6 +442,7 @@ while not allNeededItemsCollected:
         # check if all world objects have been retrieved
         checkInventory()
         if allNeededItemsCollected:
+            print ('All items collected!')
             break
 
         # choose new direction 
@@ -459,7 +450,7 @@ while not allNeededItemsCollected:
 
         
     elif roomSeen: #old room
-        print('In the ' + currentRoom)
+        print('In the ' + currRoomName)
 
         # choose new direction 
         currentRoom = evaluateDirection()
