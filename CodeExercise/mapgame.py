@@ -6,11 +6,8 @@
 ## The file also uses a scenario.txt file to catalog which room is the starting 
 ## room and which items are necessary to grab along the route. 
 
-import re
 import xml.etree.ElementTree as ET
-import numpy as np
 import pandas as pd
-import bs4 as bs
 
 nodeTree = ET.parse('map.xml')
 
@@ -50,16 +47,13 @@ def readTxtFile(filename):
     with open(filename) as file:
         lines = file.readlines()
         textFileInfo = [line.rstrip() for line in lines]
-
     return
 
 ## adds the next column to giantLookUpTable
 def addToLUT(nextList, attrStr):
     global giantLookUpTable
-
     tempList = pd.DataFrame(nextList, columns=[attrStr])
     giantLookUpTable = pd.concat([giantLookUpTable, tempList], axis=1)
-
     return
 
 ## extracts room list from map.xml
@@ -68,7 +62,6 @@ def grabRoomIds(rmstr):
     attr = 'roomID'
     for room in root:
         tempName = room.attrib['id']
-
         rmstr += tempName
         rmstr += ','
 
@@ -80,10 +73,8 @@ def grabRoomIds(rmstr):
 ## extracts room names from map.xml
 def grabRoomNames(rmstr):
     attr = 'roomName'
-
     for room in root:
         tempName = room.attrib['name']
-
         rmstr += tempName
         rmstr += ','
 
@@ -95,14 +86,11 @@ def grabRoomNames(rmstr):
 ## extracts rooms with Norths from map.xml
 def grabNorth(rmstr):
     attr = 'N'
-
     for room in root:
         try: 
             tempName = room.attrib['north']
-
         except:
             tempName = '0'
-            
         finally:
             rmstr += tempName
             rmstr += ','
@@ -115,14 +103,11 @@ def grabNorth(rmstr):
 ## extracts rooms with Easts from map.xml
 def grabEast(rmstr):
     attr = 'E'
-
     for room in root:
         try: 
             tempName = room.attrib['east']
-
         except:
             tempName = '0'
-            
         finally:
             rmstr += tempName
             rmstr += ','
@@ -135,14 +120,11 @@ def grabEast(rmstr):
 ## extracts rooms with Souths from map.xml
 def grabSouth(rmstr):
     attr = 'S'
-
     for room in root:
         try: 
             tempName = room.attrib['south']
-
         except:
             tempName = '0'
-            
         finally:
             rmstr += tempName
             rmstr += ','
@@ -155,14 +137,11 @@ def grabSouth(rmstr):
 ## extracts rooms with Wests from map.xml
 def grabWest(rmstr):
     attr = 'W'
-
     for room in root:
         try: 
             tempName = room.attrib['west']
-
         except:
             tempName = '0'
-            
         finally:
             rmstr += tempName
             rmstr += ','
@@ -175,14 +154,11 @@ def grabWest(rmstr):
 ## extracts room objects from map.xml
 def grabWorldObjects(rmstr):
     attr = 'roomItems'
-
     for room in root:
         try:
             tempName = room.find('object').attrib['name']
-                
         except:
             tempName = '0'
-            
         finally:
             rmstr += tempName
             rmstr += ','
@@ -253,7 +229,7 @@ def createDirectionVisitedWest():
     addToLUT(directionVisitedW, attr)
     return
 
-#
+## sets roomsVisited column to 1
 def updateRoomVisCheck():
     global giantLookUpTable
     global currentRoom
@@ -261,7 +237,7 @@ def updateRoomVisCheck():
     giantLookUpTable.at[currentRoom,"roomsVisited"] = '1'
     return
     
-#
+## sets goneDir column to 1
 def updateDirVisN():
     global giantLookUpTable
     global currentRoom
@@ -269,7 +245,7 @@ def updateDirVisN():
     giantLookUpTable.at[currentRoom,"goneN"] = '1'
     return
 
-#
+## sets goneDir column to 1
 def updateDirVisE():
     global giantLookUpTable
     global currentRoom
@@ -277,7 +253,7 @@ def updateDirVisE():
     giantLookUpTable.at[currentRoom,"goneE"] = '1'
     return
 
-#
+## sets goneDir column to 1
 def updateDirVisS():
     global giantLookUpTable
     global currentRoom
@@ -285,7 +261,7 @@ def updateDirVisS():
     giantLookUpTable.at[currentRoom,"goneS"] = '1'
     return
 
-#
+## sets goneDir column to 1
 def updateDirVisW():
     global giantLookUpTable
     global currentRoom
@@ -300,13 +276,10 @@ def updateInventory():
     roomObject = giantLookUpTable.at[currentRoom,"roomItems"]
     currRoomName = giantLookUpTable.at[currentRoom, "roomName"]
 
-
     if (roomObject != '0' and roomObject not in itemsFound):
         itemsFound.append(roomObject)
         giantLookUpTable.at[currentRoom,"roomItems"] = '0'
-
         print('\nPicked up ' + roomObject + ' in ' + currRoomName + '!\n')
-
     return
 
 ## modifies allNeededItemsCollected if necessary
@@ -317,7 +290,6 @@ def checkInventory():
 
     if set(itemsFound) == set(textFileInfo):
         allNeededItemsCollected = True
-
     return
 
 # chooses room you will go based on direction/backtracking priority
@@ -345,8 +317,7 @@ def evaluateDirection():
             print('Going ' + direction)
             historyLog.append(currentRoom)
             updateDirVisN()
-            return currN
-                
+            return currN 
     else:
         backTrack = "North"
         updateDirVisN()
@@ -386,7 +357,6 @@ def evaluateDirection():
         backTrack = "West"
         updateDirVisW()
 
-    
     print ('Going back ' + backTrack)
     return historyLog.pop()
 
@@ -414,11 +384,9 @@ createDirectionVisitedNorth()
 createDirectionVisitedEast()
 createDirectionVisitedSouth()
 createDirectionVisitedWest()
-#createItemChecklist()
 
 #set index to room-Id must be done after df completion or include index in every additional column
 giantLookUpTable.set_index('roomID', inplace=True)
-Index = giantLookUpTable.index
 
 ## Find out starting room and objects needed for route
 readTxtFile(scenarioFile) 
@@ -448,79 +416,10 @@ while not allNeededItemsCollected:
         # choose new direction 
         currentRoom = evaluateDirection()
 
-        
     elif roomSeen: #old room
         print('In the ' + currRoomName)
 
         # choose new direction 
         currentRoom = evaluateDirection()
 
-
 ##############################################################
-##Testing##
-
-# giantLookUpTable.at[0,"roomID"]
-# giantLookUpTable.iat[1,3]
-# df.loc[row_indexer,column_indexer]
-# df2[df2["E"].isin(["two", "four"])]
-#Direction my need to be saved in a history too unless historylog logs direction
-
-# print(giantLookUpTable.to_string())
-
-# print(giantLookUpTable)
-# print('\n')
-# print(Index)
-# print('\n')
-# print(textFileInfo)
-
-# Index = giantLookUpTable.index
-# for room in Index:
-#     print(giantLookUpTable.at[room,"roomName"])
-
-# print('\nAll info about the foothills:')
-# print(giantLookUpTable.loc['foothills',:])
-
-# print('\nNorth of the Kitchen is: ' + giantLookUpTable.at['kitchen','N'])
-
-
-    #print (root.tag)
-
-    #root.tag and root.tag[0:3] = "map"
-    #root.tag[0:2] = "ma"
-    #root.tag[0] and root.tag[0:1] = "m"
-    #root.tag[1] = "a"
-
-    # #print(roomList)
-    # print (room.attrib) #prints all <room> properties
-            #print (room.attrib['id']) #prints <room> 'id' property
-
-    # #error happens if attribute not there
-    # try: 
-    #     print ("North: " + room.attrib['north'])
-    # except:
-    #     pass
-    # try:
-    #     print ("East: " + room.attrib['east'])
-    # except:
-    #     pass
-    # try:
-    #     print ("South: " + room.attrib['south'])
-    # except:
-    #     pass
-    # try:
-    #     print ("West: " + room.attrib['west'])
-    # except:
-    #     pass
-
-
-    # #prints object in room if there is one
-    # for item in room:
-    #     print (item.attrib['name'])
-
-
-    # print(room.find('object').text) #prints "None"
-
-    #giantLookUpTable = np.array(roomList)
-
-
-
