@@ -6,6 +6,7 @@
 ## The file also uses a scenario.txt file to catalog which room is the starting 
 ## room and which items are necessary to grab along the route. 
 
+import re
 import xml.etree.ElementTree as ET
 import numpy as np
 import pandas as pd
@@ -29,12 +30,13 @@ directionVisitedN = []
 directionVisitedE = []
 directionVisitedS = []
 directionVisitedW = []
-roomItemChecklist = []
+itemsFound = [] #inventory
 allNeededItemsCollected = False 
 textFileInfo = [] #used to convert txt file to list
 startingRoom = ''
-currentRoom = ''
+currentRoom = '' #state
 direction = ''
+historyLog = [] #tracking enabled
 
 ################## D E F S ################
 
@@ -42,7 +44,7 @@ def Convert(string):
     li = list(string.split(","))
     return li
 
-##textFileInfo populated
+## textFileInfo populated
 def readTxtFile(filename):
     global textFileInfo
     with open(filename) as file:
@@ -51,7 +53,7 @@ def readTxtFile(filename):
 
     return
 
-##adds the next column to giantLookUpTable
+## adds the next column to giantLookUpTable
 def addToLUT(nextList, attrStr):
     global giantLookUpTable
 
@@ -190,7 +192,7 @@ def grabWorldObjects(rmstr):
     addToLUT(roomList, attr)
     return
 
-##makes empty bool column for data frame
+## makes empty bool column for data frame
 def createroomVisitedChecklist():
     global roomVisitedChecklist
     global roomList
@@ -203,11 +205,11 @@ def createroomVisitedChecklist():
 
     return
 
-##makes empty bool column for data frame
+## makes empty bool column for data frame
 def createDirectionVisitedNorth():
     global directionVisitedN
     global roomList
-    attr = 'directN'
+    attr = 'goneN'
     rows = len(roomList)
 
     emptyArray = [0]*rows
@@ -215,11 +217,11 @@ def createDirectionVisitedNorth():
     addToLUT(directionVisitedN, attr)
     return
 
-##makes empty bool column for data frame
+## makes empty bool column for data frame
 def createDirectionVisitedEast():
     global directionVisitedE
     global roomList
-    attr = 'directE'
+    attr = 'goneE'
     rows = len(roomList)
 
     emptyArray = [0]*rows
@@ -227,11 +229,11 @@ def createDirectionVisitedEast():
     addToLUT(directionVisitedE, attr)
     return
 
-##makes empty bool column for data frame
+## makes empty bool column for data frame
 def createDirectionVisitedSouth():
     global directionVisitedS
     global roomList
-    attr = 'directS'
+    attr = 'goneS'
     rows = len(roomList)
 
     emptyArray = [0]*rows
@@ -239,11 +241,11 @@ def createDirectionVisitedSouth():
     addToLUT(directionVisitedS, attr)
     return
 
-##makes empty bool column for data frame
+## makes empty bool column for data frame
 def createDirectionVisitedWest():
     global directionVisitedW
     global roomList
-    attr = 'directW'
+    attr = 'goneW'
     rows = len(roomList)
 
     emptyArray = [0]*rows
@@ -251,17 +253,155 @@ def createDirectionVisitedWest():
     addToLUT(directionVisitedW, attr)
     return
 
-##makes empty bool column for data frame
-def createItemChecklist():
-    global roomItemChecklist
-    global roomList
-    attr = 'itemChecklist'
-    rows = len(roomList)
+# ## makes empty bool column for data frame
+# def createItemChecklist():
+#     global roomItemChecklist
+#     global roomList
+#     attr = 'itemChecklist'
+#     rows = len(roomList)
 
-    emptyArray = [0]*rows
-    roomItemChecklist = emptyArray
-    addToLUT(roomItemChecklist, attr)
+#     emptyArray = [0]*rows
+#     roomItemChecklist = emptyArray
+#     addToLUT(roomItemChecklist, attr)
+#     return
+
+#
+def updateRoomVisCheck():
+    global giantLookUpTable
+    global currentRoom
+
+    giantLookUpTable.at[currentRoom,"roomsVisited"] = '1'
     return
+    
+#
+def updateDirVisN():
+    global giantLookUpTable
+    global currentRoom
+
+    giantLookUpTable.at[currentRoom,"goneN"] = '1'
+    return
+
+#
+def updateDirVisE():
+    global giantLookUpTable
+    global currentRoom
+
+    giantLookUpTable.at[currentRoom,"goneE"] = '1'
+    return
+
+#
+def updateDirVisS():
+    global giantLookUpTable
+    global currentRoom
+
+    giantLookUpTable.at[currentRoom,"goneS"] = '1'
+    return
+
+#
+def updateDirVisW():
+    global giantLookUpTable
+    global currentRoom
+
+    giantLookUpTable.at[currentRoom,"goneW"] = '1'
+    return
+
+## picks up item in room if present
+def updateInventory():
+    global giantLookUpTable
+    global currentRoom
+    roomObject = giantLookUpTable.at[currentRoom,"roomItems"]
+
+    if (roomObject != '0' and roomObject not in itemsFound):
+        itemsFound.append(roomObject)
+        giantLookUpTable.at[currentRoom,"roomItems"] = '0'
+
+        print('Picked up ' + roomObject + ' in ' + currentRoom + '.\n')
+
+    return
+
+## modifies allNeededItemsCollected if necessary
+def checkInventory():
+    global allNeededItemsCollected
+    global itemsFound
+    global textFileInfo
+
+    if set(itemsFound) == set(textFileInfo):
+        allNeededItemsCollected = True
+
+    return
+
+# chooses room you will go based on direction/backtracking priority
+def evaluateDirection():
+    global giantLookUpTable
+    global currentRoom
+    global historyLog
+    global direction
+    backTrack = ''
+
+    currN = giantLookUpTable.at[currentRoom, "N"]
+    currE = giantLookUpTable.at[currentRoom, "E"]
+    currS = giantLookUpTable.at[currentRoom, "S"]
+    currW = giantLookUpTable.at[currentRoom, "W"]
+
+    histN = giantLookUpTable.at[currentRoom, "goneN"]
+    histE = giantLookUpTable.at[currentRoom, "goneE"]
+    histS = giantLookUpTable.at[currentRoom, "goneS"]
+    histW = giantLookUpTable.at[currentRoom, "goneW"]
+
+    
+
+    if not histN and currN != '0':
+        if currN != historyLog[-1]:
+            direction = "North"
+            print('Going ' + direction)
+            historyLog.append(currentRoom)
+            giantLookUpTable.at[currentRoom, "goneN"] = '1'
+            return currN
+        else:
+            backTrack = "North"
+            giantLookUpTable.at[currentRoom, "goneN"] = '1'
+    
+    elif not histE and currE != '0':
+        if currE != historyLog[-1]:
+            direction = "East"
+            print('Going ' + direction)
+            historyLog.append(currentRoom)
+            giantLookUpTable.at[currentRoom, "goneE"] = '1'
+            return currE
+        else:
+            backTrack = "East"
+            giantLookUpTable.at[currentRoom, "goneE"] = '1'
+
+    
+    elif not histS and currS != '0':
+        if currS != historyLog[-1]:
+            direction = "South"
+            print('Going ' + direction)
+            historyLog.append(currentRoom)
+            giantLookUpTable.at[currentRoom, "goneS"] = '1'
+            return currS
+        else:
+            backTrack = "South"
+            giantLookUpTable.at[currentRoom, "goneS"] = '1'
+
+    elif not histW and currW != '0':
+        if currW != historyLog[-1]:
+            direction = "West"
+            print('Going ' + direction)
+            historyLog.append(currentRoom)
+            giantLookUpTable.at[currentRoom, "goneW"] = '1'
+            return currW
+        else:
+            backTrack = "West"
+            giantLookUpTable.at[currentRoom, "goneW"] = '1'
+
+    else: 
+        print ('Going back ' + backTrack)
+        return historyLog.pop()
+
+
+    return
+
 
 ###################### M A I N  C O D E ######################
 
@@ -285,30 +425,44 @@ createDirectionVisitedNorth()
 createDirectionVisitedEast()
 createDirectionVisitedSouth()
 createDirectionVisitedWest()
-createItemChecklist()
+#createItemChecklist()
+
+#set index to room-Id must be done after df completion or include index in every additional column
+giantLookUpTable.set_index('roomID', inplace=True)
+Index = giantLookUpTable.index
 
 ## Find out starting room and objects needed for route
 readTxtFile(scenarioFile) 
 startingRoom = textFileInfo[0]
 currentRoom = startingRoom
+historyLog.append(startingRoom)
+textFileInfo.remove(startingRoom)
 
 ## Maze navigation loop
+while not allNeededItemsCollected:
+    roomSeen = giantLookUpTable.at[currentRoom,"roomsVisited"]
 
-print(giantLookUpTable)
+    if not roomSeen: #new room
+        updateRoomVisCheck()
+        print('In the ' + currentRoom)
 
-# while (allNeededItemsCollected != True):
-#     # grab object if there is one
+        # grab object if there is one 
+        updateInventory()
 
-#     if (1):
-#         print
-#     elif(0):
-#         print
-#     else:
-#         print
+        # check if all world objects have been retrieved
+        checkInventory()
+        if allNeededItemsCollected:
+            break
 
+        # choose new direction 
+        currentRoom = evaluateDirection()
 
+        
+    elif roomSeen: #old room
+        print('In the ' + currentRoom)
 
-
+        # choose new direction 
+        currentRoom = evaluateDirection()
 
 
 ##############################################################
@@ -318,8 +472,25 @@ print(giantLookUpTable)
 # giantLookUpTable.iat[1,3]
 # df.loc[row_indexer,column_indexer]
 # df2[df2["E"].isin(["two", "four"])]
+#Direction my need to be saved in a history too unless historylog logs direction
 
-#print(giantLookUpTable)
+# print(giantLookUpTable.to_string())
+
+# print(giantLookUpTable)
+# print('\n')
+# print(Index)
+# print('\n')
+# print(textFileInfo)
+
+# Index = giantLookUpTable.index
+# for room in Index:
+#     print(giantLookUpTable.at[room,"roomName"])
+
+# print('\nAll info about the foothills:')
+# print(giantLookUpTable.loc['foothills',:])
+
+# print('\nNorth of the Kitchen is: ' + giantLookUpTable.at['kitchen','N'])
+
 
     #print (root.tag)
 
